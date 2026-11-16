@@ -1,0 +1,216 @@
+-- ODYSSEY-STYLE SAB FINDER UI
+-- Visual overlay only. It does not read hidden SAB inventory,
+-- scan private game data, steal items, or bypass game protections.
+-- Intended as a harmless interface prototype.
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+
+local parent = CoreGui
+local ok, playerGui = pcall(function()
+    return Players.LocalPlayer:WaitForChild("PlayerGui")
+end)
+if ok and playerGui then
+    parent = playerGui
+end
+
+pcall(function()
+    local old = parent:FindFirstChild("OdysseyFinder")
+    if old then old:Destroy() end
+end)
+
+local purple = Color3.fromRGB(151, 92, 255)
+local dark = Color3.fromRGB(17, 14, 27)
+local panel = Color3.fromRGB(27, 22, 42)
+local muted = Color3.fromRGB(180, 166, 205)
+local white = Color3.fromRGB(247, 242, 255)
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "OdysseyFinder"
+gui.ResetOnSpawn = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = parent
+
+local function round(instance, radius)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, radius or 10)
+    c.Parent = instance
+end
+
+local function outline(instance, color, thickness, transparency)
+    local s = Instance.new("UIStroke")
+    s.Color = color or purple
+    s.Thickness = thickness or 1
+    s.Transparency = transparency or 0
+    s.Parent = instance
+end
+
+local main = Instance.new("Frame")
+main.Name = "Main"
+main.Size = UDim2.fromOffset(310, 330)
+main.Position = UDim2.new(0.5, -155, 0.5, -165)
+main.BackgroundColor3 = dark
+main.BorderSizePixel = 0
+main.Active = true
+main.Parent = gui
+round(main, 16)
+outline(main, purple, 1.6, 0.12)
+
+local top = Instance.new("Frame")
+top.Size = UDim2.new(1, 0, 0, 58)
+top.BackgroundColor3 = panel
+top.BorderSizePixel = 0
+top.Parent = main
+round(top, 16)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -56, 0, 28)
+title.Position = UDim2.fromOffset(15, 7)
+title.BackgroundTransparency = 1
+title.Text = "ODYSSEY FINDER"
+title.TextColor3 = white
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 18
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = top
+
+local subtitle = Instance.new("TextLabel")
+subtitle.Size = UDim2.new(1, -56, 0, 17)
+subtitle.Position = UDim2.fromOffset(16, 34)
+subtitle.BackgroundTransparency = 1
+subtitle.Text = "SAB  •  SERVER TOOLS"
+subtitle.TextColor3 = muted
+subtitle.Font = Enum.Font.GothamMedium
+subtitle.TextSize = 10
+subtitle.TextXAlignment = Enum.TextXAlignment.Left
+subtitle.Parent = top
+
+local close = Instance.new("TextButton")
+close.Size = UDim2.fromOffset(32, 32)
+close.Position = UDim2.new(1, -43, 0, 12)
+close.BackgroundColor3 = Color3.fromRGB(55, 37, 78)
+close.Text = "×"
+close.TextColor3 = white
+close.Font = Enum.Font.GothamBold
+close.TextSize = 22
+close.Parent = top
+round(close, 9)
+
+local function makeLabel(text, y, height, size, color)
+    local l = Instance.new("TextLabel")
+    l.Size = UDim2.new(1, -30, 0, height)
+    l.Position = UDim2.fromOffset(15, y)
+    l.BackgroundTransparency = 1
+    l.Text = text
+    l.TextColor3 = color or white
+    l.Font = Enum.Font.GothamSemibold
+    l.TextSize = size or 13
+    l.TextXAlignment = Enum.TextXAlignment.Left
+    l.Parent = main
+    return l
+end
+
+makeLabel("MINIMUM INCOME FILTER", 73, 20, 11, muted)
+
+local filterBox = Instance.new("TextBox")
+filterBox.Size = UDim2.new(1, -30, 0, 40)
+filterBox.Position = UDim2.fromOffset(15, 97)
+filterBox.BackgroundColor3 = panel
+filterBox.Text = "20000000"
+filterBox.PlaceholderText = "Minimum income per second"
+filterBox.TextColor3 = white
+filterBox.PlaceholderColor3 = muted
+filterBox.Font = Enum.Font.GothamBold
+filterBox.TextSize = 15
+filterBox.ClearTextOnFocus = false
+filterBox.Parent = main
+round(filterBox, 9)
+outline(filterBox, Color3.fromRGB(89, 67, 125), 1, 0.25)
+
+local scan = Instance.new("TextButton")
+scan.Size = UDim2.new(1, -30, 0, 42)
+scan.Position = UDim2.fromOffset(15, 150)
+scan.BackgroundColor3 = purple
+scan.Text = "SCAN ACCESSIBLE DATA"
+scan.TextColor3 = white
+scan.Font = Enum.Font.GothamBold
+scan.TextSize = 13
+scan.Parent = main
+round(scan, 10)
+
+local status = Instance.new("TextLabel")
+status.Size = UDim2.new(1, -30, 0, 58)
+status.Position = UDim2.fromOffset(15, 202)
+status.BackgroundColor3 = panel
+status.Text = "Ready. No SAB inventory data source is connected."
+status.TextColor3 = muted
+status.TextWrapped = true
+status.Font = Enum.Font.Gotham
+status.TextSize = 12
+status.Parent = main
+round(status, 9)
+
+local footer = makeLabel("UI PROTOTYPE  •  NO HIDDEN DATA ACCESS", 273, 22, 9, muted)
+
+scan.Activated:Connect(function()
+    local minimum = tonumber(filterBox.Text)
+    if not minimum or minimum < 0 then
+        status.Text = "Enter a valid minimum income number."
+        return
+    end
+    status.Text = "Filter set to " .. tostring(minimum) .. "/s. Connect an authorized data source to display results."
+end)
+
+local reopen = Instance.new("TextButton")
+reopen.Size = UDim2.fromOffset(118, 40)
+reopen.Position = UDim2.new(0, 16, 0.5, -20)
+reopen.BackgroundColor3 = panel
+reopen.Text = "OPEN ODYSSEY"
+reopen.TextColor3 = white
+reopen.Font = Enum.Font.GothamBold
+reopen.TextSize = 11
+reopen.Visible = false
+reopen.Parent = gui
+round(reopen, 10)
+outline(reopen, purple, 1.2, 0.1)
+
+close.Activated:Connect(function()
+    main.Visible = false
+    reopen.Visible = true
+end)
+
+reopen.Activated:Connect(function()
+    main.Visible = true
+    reopen.Visible = false
+end)
+
+-- Touch and mouse dragging.
+local dragging = false
+local dragStart, startPos, activeInput
+
+top.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+        activeInput = input
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        main.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end)
